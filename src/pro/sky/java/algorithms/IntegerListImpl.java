@@ -2,9 +2,9 @@ package pro.sky.java.algorithms;
 
 import java.util.Arrays;
 
-public class IntegerListImpl implements IntegerList{
+public class IntegerListImpl implements IntegerList {
 
-    private int lengthArray = 10;
+    private int lengthArray = 3;
     private int[] list;
     private int size = 0;
 
@@ -20,9 +20,7 @@ public class IntegerListImpl implements IntegerList{
         list[size] = item;
         size++;
         if (size == lengthArray) {
-            int[] timeArray = new int[(lengthArray += 10)];
-            System.arraycopy(list, 0, timeArray, 0, size);
-            list = timeArray;
+            grow();
         }
         return list[(size - 1)];
     }
@@ -39,9 +37,7 @@ public class IntegerListImpl implements IntegerList{
         list = temporaryArray;
         size++;
         if (size == lengthArray) {
-            int[] timeArray = new int[(lengthArray += 10)];
-            System.arraycopy(list, 0, timeArray, 0, size);
-            list = timeArray;
+            grow();
         }
         return list[index];
     }
@@ -68,6 +64,9 @@ public class IntegerListImpl implements IntegerList{
                 }
                 list[(size - 1)] = 0;
                 size--;
+                if (size < (lengthArray / 2)) {
+                    resize();
+                }
                 return item;
             }
         }
@@ -86,6 +85,9 @@ public class IntegerListImpl implements IntegerList{
         }
         list[(size - 1)] = 0;
         size--;
+        if (size < (lengthArray / 2)) {
+            resize();
+        }
         return item;
     }
 
@@ -168,23 +170,30 @@ public class IntegerListImpl implements IntegerList{
         return timeArray;
     }
 
-    //Переработанный метод contains
+    //Переработанный метод contains c использованием бинарного поиска и сортировки методом вставки
     @Override
     public boolean containsBinary(int item) {
         return binarySearch(list, item);
     }
 
-    //Метод бинарного поиска с использованием быстрой сортировки
+    //Переработанный метод contains c использованием бинарного поиска и рекурсивной сортировки
+    @Override
+    public boolean containsBinaryWithRecursionSort(int item) {
+        return binarySearchWithRecursion(list, item);
+    }
+
+    //Метод бинарного поиска с использованием сортировки методом вставки
     private boolean binarySearch(int[] arr, int element) {
-        sortInsertion1(arr);
+        int[] arrCopy = Arrays.copyOf(arr, lengthArray);
+        sortInsertion(arrCopy);
         int min = 0;
         int max = arr.length - 1;
         while (min <= max) {
             int mid = (min + max) / 2;
-            if (element == arr[mid]) {
+            if (element == arrCopy[mid]) {
                 return true;
             }
-            if (element < arr[mid]) {
+            if (element < arrCopy[mid]) {
                 max = mid - 1;
             } else {
                 min = mid + 1;
@@ -193,8 +202,28 @@ public class IntegerListImpl implements IntegerList{
         return false;
     }
 
-    //Самая быстрая сортировка из трех рассматриваемых
-    private void sortInsertion1(int[] arr) {
+    //Метод бинарного поиска с использованием рекурсивной сортировки
+    private boolean binarySearchWithRecursion(int[] arr, int element) {
+        int[] arrCopy = Arrays.copyOf(arr, lengthArray);
+        quickSort(arrCopy, 0, lengthArray - 1);
+        int min = 0;
+        int max = arrCopy.length - 1;
+        while (min <= max) {
+            int mid = (min + max) / 2;
+            if (element == arrCopy[mid]) {
+                return true;
+            }
+            if (element < arrCopy[mid]) {
+                max = mid - 1;
+            } else {
+                min = mid + 1;
+            }
+        }
+        return false;
+    }
+
+    //Сортировка методом вставки
+    private void sortInsertion(int[] arr) {
         for (int i = 1; i < arr.length; i++)   {
             int temp = arr[i];
             int j = i;
@@ -206,4 +235,45 @@ public class IntegerListImpl implements IntegerList{
         }
     }
 
+    //Быстрая сортировка с применением рекурсии
+    public static void quickSort(int[] arr, int begin, int end) {
+        if (begin < end) {
+            int partitionIndex = partition(arr, begin, end);
+            quickSort(arr, begin, partitionIndex - 1);
+            quickSort(arr, partitionIndex + 1, end);
+        }
+    }
+    private static int partition(int[] arr, int begin, int end) {
+        int pivot = arr[end];
+        int i = (begin - 1);
+        for (int j = begin; j < end; j++) {
+            if (arr[j] <= pivot) {
+                i++;
+                swapElements(arr, i, j);
+            }
+        }
+        swapElements(arr, i + 1, end);
+        return i + 1;
+    }
+    private static void swapElements(int[] arr, int left, int right) {
+        int temp = arr[left];
+        arr[left] = arr[right];
+        arr[right] = temp;
+    }
+
+    //Метод расширения массива-хранилища
+    private void grow() {
+        lengthArray = (int) (lengthArray * 1.5);
+        int[] timeArray = new int[lengthArray];
+        System.arraycopy(list, 0, timeArray, 0, size);
+        list = timeArray;
+    }
+
+    //Метод уменьшения массива-хранилища
+    private void resize() {
+        lengthArray = (int) (lengthArray * 0.67);
+        int[] timeArray = new int[lengthArray];
+        System.arraycopy(list, 0, timeArray, 0, size);
+        list = timeArray;
+    }
 }
